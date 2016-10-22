@@ -1,0 +1,33 @@
+body {
+    font-size: 24px;
+    font-family: Arial;
+    background: lightgray;
+}
+
+#todoapp {
+    width: 500px;
+    background: white;
+    margin: 130px auto 0 auto;
+    box-shadow: 0 2px 6px 0 silver,
+                0 25px 50px 0 darkgray;
+}
+
+#new-todo {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    font-size: 24px;
+    font-family: inherit;
+    font-style: italic;
+}
+
+#todo-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;;
+}
+
+#todo-list li {
+    border-top: 1px dotted silver;
+    padding: 15px;
+}
