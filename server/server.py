@@ -7,19 +7,17 @@ from os import curdir, sep
 
 todo_list = []
 
+def add_note(note):
+  todo_list.append(note)
+  return
+
+def remove_note(note):
+  if note in todo_list:
+    todo_list.remove(note)
+  return
+
 # HTTPRequestHandler class
 class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
-
-
-  def add_note(note):
-    todo_list.append(note)
-    return
-
-  def remove_note(note):
-    if note in todo_list:
-      todo_list.remove(note)
-    return
-
   # GET
   def do_GET(self):
     # Send response status code
@@ -51,7 +49,6 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
       self.end_headers()
       self.wfile.write(f.read())
       f.close()
-
     return
 
   #POST
