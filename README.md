@@ -3,7 +3,7 @@
 Run server
 
 
-        python server.py
+        python server.py --run
         
 Open your browser on 
 

@@ -1,35 +1,45 @@
 #!/usr/bin/env python
 
+import argparse
 import cgi
 import json
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from os import curdir, sep
+from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+#from http.server import BaseHTTPRequestHandler, HTTPServer
 
-todo_list = []
+class NoteList:
 
-def add_note(note):
-  todo_list.append(note)
-  return
+  def __init__(self):
+        self.todo_list = []
 
-def remove_note(note):
-  if note in todo_list:
-    todo_list.remove(note)
-  return
+  def add_note(self, note):
+    self.todo_list.append(note)
+    return
+
+  def delete_note(self, note):
+    if note in self.todo_list:
+      self.todo_list.remove(note)
+    return
+
+  def get_notes(self):
+    return self.todo_list
+
+
+note_list = NoteList()
 
 # HTTPRequestHandler class
 class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
+
+  backend_path = "/todo"
+
   # GET
   def do_GET(self):
-    # Send response status code
     self.send_response(200)
-
-    if self.path == "/todo":
-      # Send headers
+    if self.path == backend_path:
       self.send_header('Content-type','application/json')
       self.end_headers()
-
-      # Write content as utf-8 data
-      self.wfile.write(json.dumps(todo_list))
+      notes = note_list.get_notes()
+      self.wfile.write(json.dumps(notes))
     else:
       path = '../frontend/'
       if self.path=="/":
@@ -53,27 +63,29 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
   #POST
   def do_POST(self):
-    if self.path == "/todo":
+    if self.path == backend_path:
       length = int(self.headers['Content-length'])
       body = self.rfile.read(length)
       postvars = json.loads(body)
       note = postvars['todo']
-      add_note(note)
+      note_list.add_note(note)
       self.send_response(200, "OK")
       self.end_headers()
-      self.wfile.write(json.dumps(todo_list))
+      notes = note_list.get_notes()
+      self.wfile.write(json.dumps(notes))
     return
 
   def do_DELETE(self):
-    if self.path == "/todo":
+    if self.path == backend_path:
       length = int(self.headers['Content-length'])
       body = self.rfile.read(length)
       postvars = json.loads(body)
       note = postvars['todo']
-      remove_note(note)
+      note_list.delete_note(note)
       self.send_response(200, "OK")
       self.end_headers()
-      self.wfile.write(json.dumps(todo_list))
+      notes = note_list.get_notes()
+      self.wfile.write(json.dumps(notes))
     return
 
 def run():
@@ -84,4 +96,9 @@ def run():
   httpd.serve_forever()
 
 
-run()
+parser = argparse.ArgumentParser()
+parser.add_argument("--run", help="Run the server",
+                    action="store_true")
+args = parser.parse_args()
+if args.run:
+  run()
