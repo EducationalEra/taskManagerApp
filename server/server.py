@@ -1,36 +1,34 @@
 #!/usr/bin/env python
 
 import argparse
-import cgi
 import json
 from os import curdir, sep
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
-#from http.server import BaseHTTPRequestHandler, HTTPServer
 
-class NoteList:
+class Database:
 
   def __init__(self):
-        self.todo_list = []
+        self.db = {}
+        self.count = 0
 
   def add_note(self, note):
-    self.todo_list.append(note)
-    return
+    self.count += 1
+    self.db[self.count] = {'id': self.count, 'note': note}
+    return self.db[self.count]
 
-  def delete_note(self, note):
-    if note in self.todo_list:
-      self.todo_list.remove(note)
+  def delete_note(self, id):
+    if id in self.db:
+      del self.db[id]
     return
-
   def get_notes(self):
-    return self.todo_list
+    return self.db
 
 
-note_list = NoteList()
+database = Database()
+backend_path = "/todo"
 
 # HTTPRequestHandler class
 class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
-
-  backend_path = "/todo"
 
   # GET
   def do_GET(self):
@@ -38,21 +36,24 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
     if self.path == backend_path:
       self.send_header('Content-type','application/json')
       self.end_headers()
-      notes = note_list.get_notes()
+      notes = database.get_notes()
       self.wfile.write(json.dumps(notes))
     else:
       path = '../frontend/'
       if self.path=="/":
         self.path="index.html"
-      if self.path.endswith(".html"):
+      elif self.path.endswith(".html"):
         mimetype='text/html'
         sendReply = True
-      if self.path.endswith(".js"):
+      elif self.path.endswith(".js"):
         mimetype='application/javascript'
         sendReply = True
-      if self.path.endswith(".css"):
+      elif self.path.endswith(".css"):
         mimetype='text/css'
         sendReply = True
+      else:
+        self.send_response(404)
+        return
       f = open(curdir + sep + path + self.path)
       self.send_response(200)
       self.send_header('Content-type', mimetype)
@@ -68,23 +69,22 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
       body = self.rfile.read(length)
       postvars = json.loads(body)
       note = postvars['todo']
-      note_list.add_note(note)
-      self.send_response(200, "OK")
+      new_note = database.add_note(note)
+      self.send_response(201)
+      self.send_header('Content-type','application/json')
       self.end_headers()
-      notes = note_list.get_notes()
-      self.wfile.write(json.dumps(notes))
+      # In real life we wound't send all data again.
+      self.wfile.write(json.dumps(new_note))
     return
 
   def do_DELETE(self):
-    if self.path == backend_path:
-      length = int(self.headers['Content-length'])
-      body = self.rfile.read(length)
-      postvars = json.loads(body)
-      note = postvars['todo']
-      note_list.delete_note(note)
-      self.send_response(200, "OK")
+    if self.path.startswith(backend_path):
+      id = [int(s) for s in self.path.split("/") if s.isdigit()][0]
+      database.delete_note(id)
+      self.send_response(200)
       self.end_headers()
-      notes = note_list.get_notes()
+      notes = database.get_notes()
+      # In real life we wound't send all data again.
       self.wfile.write(json.dumps(notes))
     return
 

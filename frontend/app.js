@@ -5,12 +5,17 @@ let enterCode = 13
  */
 let displayTodos = function () {
   api.getTodos().then(function (todos) {
-    for (let i = 0; i < todos.length; i++) {
-      let newli = document.createElement('li')
-      newli.textContent = todos[i]
-      document.getElementById('todo-list').appendChild(newli)
+    for (var key in todos) {
+      addNote(todos[key])
     }
   })
+}
+
+function addNote(note) {
+  let newli = document.createElement('li')
+  newli.textContent = note.note
+  newli.setAttribute('data-id', note.id)
+  document.getElementById('todo-list').appendChild(newli)
 }
 
 /**
@@ -22,8 +27,8 @@ let addTodo = function (event) {
   let text = inputField.value
 
   if (event.which === enterCode && text !== '') {
-    api.postTodo(text).then(function () {
-      displayTodos()
+    api.postTodo(text).then(function (todo) {
+      addNote(todo)
       inputField.value = ''
     })
   }
