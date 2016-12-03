@@ -20,20 +20,23 @@ class Database:
     if id in self.db:
       del self.db[id]
     return
+
   def get_notes(self):
-    return self.db
+    return self.db.values()
 
 
 database = Database()
-backend_path = "/todo"
+
 
 # HTTPRequestHandler class
 class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
+  backend_path = "/todo"
+  
   # GET
   def do_GET(self):
     self.send_response(200)
-    if self.path == backend_path:
+    if self.path == self.backend_path:
       self.send_header('Content-type','application/json')
       self.end_headers()
       notes = database.get_notes()
@@ -64,7 +67,7 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
   #POST
   def do_POST(self):
-    if self.path == backend_path:
+    if self.path == self.backend_path:
       length = int(self.headers['Content-length'])
       body = self.rfile.read(length)
       postvars = json.loads(body)
@@ -73,19 +76,16 @@ class todoHTTPServer_RequestHandler(BaseHTTPRequestHandler):
       self.send_response(201)
       self.send_header('Content-type','application/json')
       self.end_headers()
-      # In real life we wound't send all data again.
       self.wfile.write(json.dumps(new_note))
     return
 
   def do_DELETE(self):
-    if self.path.startswith(backend_path):
-      id = [int(s) for s in self.path.split("/") if s.isdigit()][0]
+    if self.path.startswith(self.backend_path):
+      id = int(self.path.split("/")[2])
+      print(id)
       database.delete_note(id)
       self.send_response(200)
       self.end_headers()
-      notes = database.get_notes()
-      # In real life we wound't send all data again.
-      self.wfile.write(json.dumps(notes))
     return
 
 def run():
